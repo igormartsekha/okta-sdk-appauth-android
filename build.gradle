@@ -7,7 +7,6 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.2.1'
-
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
@@ -17,20 +16,23 @@ subprojects {
     repositories {
         jcenter()
         maven { url "https://maven.google.com" }
+        flatDir {
+            dirs 'libs'
+        }
     }
 }
 
 ext {
-    versionNum = 1
-    versionName = "0.1.0"
+    versionNum = 2
+    versionName = "0.2.0"
     versionDate = new Date()
 
     // These properties should remain in sync with the values from the AppAuth SDK
     minSdkVersion = 16
     compileSdkVersion = 28
     buildToolsVersion = "28.0.3"
-    browserVersion = "1.0.0"
-    appcompatVersion = "1.0.2"
+    browserVersion = "27.1.1"
+    appcompatVersion = "27.1.1"
     // SDK dependency versions
     appAuthVersion = "0.7.1"
     okioVersion = "1.13.0"
@@ -46,10 +48,16 @@ ext {
     mockitoVersion = "2.8.47"
     robolectricVersion = "4.0.2"
     assertjVersion = "1.1.1"
+    okhttpVersion = "3.12.0"
+    jsonWebTokenVersion = "0.10.5"
 
     // Gradle plugin version
     checkstyleVersion = "8.1"
     saxonVersion = "8.7"
+
+    // AppAuth specification
+    appAuthLocation = "libs"
+    appAuthName = "okta-appauth-fork.aar"
 }
 
 task showVersion {

@@ -20,11 +20,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.support.annotation.AnyThread;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 import android.util.Log;
-import androidx.annotation.AnyThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 
 import com.okta.android.json.InvalidJsonDocumentException;
 import com.okta.android.json.JsonParser;
@@ -82,6 +82,7 @@ public class OAuthClientConfiguration {
 
     private String mClientId;
     private Uri mRedirectUri;
+    private Uri mEndSessionRedirectUri;
     private Uri mDiscoveryUri;
     private Set<String> mScopes;
 
@@ -193,34 +194,41 @@ public class OAuthClientConfiguration {
             throws InvalidJsonDocumentException {
         JsonParser jsonParser = JsonParser.forJson(jsonObject);
 
-        mConfigHash = jsonObject.toString().hashCode();
 
         mClientId = jsonParser.getRequiredString("client_id");
         mRedirectUri = jsonParser.getRequiredUri("redirect_uri");
+        mEndSessionRedirectUri = jsonParser.getRequiredUri("end_session_redirect_uri");
+        mDiscoveryUri = jsonParser.getRequiredHttpsUri("issuer_uri")
+                .buildUpon().appendEncodedPath(OIDC_DISCOVERY).build();
 
-        if (!isRedirectUriRegistered()) {
+        if (!isRedirectUrisRegistered()) {
             throw new InvalidJsonDocumentException(
-                    "redirect_uri is not handled by any activity in this app! "
+                    "redirect_uri and end_session_redirect_uri is not handled by any activity "
+                            + "in this app! "
                             + "Ensure that the appAuthRedirectScheme in your build.gradle file "
                             + "is correctly configured, or that an appropriate intent filter "
                             + "exists in your app manifest.");
         }
 
-        mDiscoveryUri = jsonParser.getRequiredHttpsUri("issuer_uri")
-                .buildUpon().appendEncodedPath(OIDC_DISCOVERY).build();
 
         mScopes = new LinkedHashSet<>(jsonParser.getRequiredStringArray("scopes"));
+
+        //We can not take hash code directly from JSONObject
+        //because JSONObject does not follow java has code contract
+        mConfigHash = jsonObject.toString().hashCode();
 
         Log.d(TAG, String.format("Configuration loaded with: \n%s", this.toString()));
     }
 
-    private boolean isRedirectUriRegistered() {
-        // ensure that the redirect URI declared in the configuration is handled by some activity
+    private boolean isRedirectUrisRegistered() {
+        // ensure that the redirect URIs declared in the configuration is handled by some activity
         // in the app, by querying the package manager speculatively
         Intent redirectIntent = new Intent();
         redirectIntent.setPackage(mPackageName);
         redirectIntent.setAction(Intent.ACTION_VIEW);
         redirectIntent.addCategory(Intent.CATEGORY_BROWSABLE);
+        // we need to check for only one of the uris because we have the same schema
+        // for other redirect URIs in the app
         redirectIntent.setData(mRedirectUri);
 
         return !mPackageManager.queryIntentActivities(redirectIntent, 0).isEmpty();
@@ -261,12 +269,22 @@ public class OAuthClientConfiguration {
 
     /**
      * Returns the redirect uri to go to once the authorization flow is complete.
-     * This will match the app's registered Uri
+     * This will match schema of the app's registered Uri provided in manifest
      *
      * @return The Uri to redirect to once the authorization flow is complete
      */
     public Uri getRedirectUri() {
         return mRedirectUri;
+    }
+
+    /**
+     * Returns the redirect uri to go to once the end session flow is complete.
+     * This will match schema of the app's registered Uri provided in manifest
+     *
+     * @return The Uri to redirect to once the end session flow is complete
+     */
+    public Uri getEndSessionRedirectUri() {
+        return mEndSessionRedirectUri;
     }
 
     /**

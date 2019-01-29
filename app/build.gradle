@@ -1,6 +1,7 @@
 apply plugin: "com.android.application"
 apply from: "${rootDir}/gradle/android-common.gradle"
 
+
 android {
     defaultConfig {
         applicationId "com.okta.appauth.android.example"
@@ -13,7 +14,7 @@ android {
                 "appAuthRedirectScheme": "com.okta.appauth.android.example"
         ]
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -21,13 +22,10 @@ android {
     }
 }
 
-
 dependencies {
     implementation project(":library")
-    implementation "net.openid:appauth:${rootProject.appAuthVersion}"
-    implementation "androidx.appcompat:appcompat:${rootProject.appcompatVersion}"
-    implementation "androidx.browser:browser:${rootProject.browserVersion}"
-    implementation 'com.google.android.material:material:1.1.0-alpha01'
+    implementation "com.android.support:appcompat-v7:${rootProject.appcompatVersion}"
+    implementation "com.android.support:design:${rootProject.appcompatVersion}"
     implementation "com.github.bumptech.glide:glide:${rootProject.glideVersion}"
     implementation "com.squareup.okio:okio:${rootProject.okioVersion}"
     implementation "joda-time:joda-time:${rootProject.jodaTimeVersion}"
